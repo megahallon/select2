@@ -896,6 +896,11 @@ S2.define('select2/results',[
       'aria-selected': 'false'
     };
 
+    if (data.divider) {
+      option.className += ' select2-divider';
+      return option;
+    }
+
     if (data.disabled) {
       delete attrs['aria-selected'];
       attrs['aria-disabled'] = 'true';
@@ -928,7 +933,7 @@ S2.define('select2/results',[
     if (data.children) {
       var $option = $(option);
 
-      var label = document.createElement('strong');
+      var label = document.createElement('span');
       label.className = 'select2-results__group';
 
       var $label = $(label);
@@ -950,10 +955,18 @@ S2.define('select2/results',[
 
       $childrenContainer.append($children);
 
+      var divider = document.createElement('li');
+      divider.className = 'select2-divider';
+      $option.append(divider);
+
       $option.append(label);
       $option.append($childrenContainer);
     } else {
-      this.template(data, option);
+      if (data.content) {
+        $(option).html(data.content);
+      } else {
+        this.template(data, option);
+      }
     }
 
     $.data(option, 'data', data);
@@ -1604,6 +1617,88 @@ S2.define('select2/selection/multiple',[
   };
 
   return MultipleSelection;
+});
+
+S2.define('select2/selection/multiplecount',[
+  'jquery',
+  './base',
+  '../utils'
+], function ($, BaseSelection, Utils) {
+  function MultipleCountSelection ($element, options) {
+    MultipleCountSelection.__super__.constructor.apply(this, arguments);
+  }
+
+  Utils.Extend(MultipleCountSelection, BaseSelection);
+
+  MultipleCountSelection.prototype.render = function () {
+    var $selection = MultipleCountSelection.__super__.render.call(this);
+
+    $selection.addClass('select2-selection--single');
+
+    $selection.html(
+      '<span class="select2-selection__rendered"></span>' +
+      '<span class="select2-selection__arrow" role="presentation">' +
+        '<b role="presentation"></b>' +
+      '</span>'
+    );
+
+    return $selection;
+  };
+
+  MultipleCountSelection.prototype.bind = function (container, $container) {
+    var self = this;
+
+    MultipleCountSelection.__super__.bind.apply(this, arguments);
+
+    this.$selection.on('click', function (evt) {
+      self.trigger('toggle', {
+        originalEvent: evt
+      });
+    });
+  };
+
+  MultipleCountSelection.prototype.clear = function () {
+    this.$selection.find('.select2-selection__rendered').empty();
+  };
+
+  MultipleCountSelection.prototype.display = function (data) {
+    var template = this.options.get('templateSelection');
+    var escapeMarkup = this.options.get('escapeMarkup');
+
+    return escapeMarkup(template(data));
+  };
+
+  MultipleCountSelection.prototype.update = function (data) {
+    this.clear();
+
+    var text = '';
+    var maxSelectCount = this.options.get('maxSelectCount');
+
+    if (data.length === 0) {
+      text = 'Nothing selected';
+    }
+    else if (maxSelectCount == 'auto') {
+      // TODO
+    }
+    else if (data.length > maxSelectCount) {
+      text = data.length + ' items selected';
+    }
+    else {
+      var items = [];
+      for (var d = 0; d < data.length; d++) {
+        var selection = data[d];
+
+        var formatted = this.display(selection);
+
+        items.push(formatted);
+      }
+      text = items.join(', ');
+    }
+
+    this.$selection.find('.select2-selection__rendered').text(text);
+  };
+
+  return MultipleCountSelection;
 });
 
 S2.define('select2/selection/placeholder',[
@@ -3095,7 +3190,9 @@ S2.define('select2/data/select',[
         text: $option.text(),
         disabled: $option.prop('disabled'),
         selected: $option.prop('selected'),
-        title: $option.prop('title')
+        title: $option.prop('title'),
+        divider: $option.attr('data-divider') !== undefined,
+        content: $option.attr('data-content')
       };
     } else if ($option.is('optgroup')) {
       data = {
@@ -3923,6 +4020,7 @@ S2.define('select2/dropdown/attachBody',[
 ], function ($, Utils) {
   function AttachBody (decorated, $element, options) {
     this.$dropdownParent = options.get('dropdownParent') || document.body;
+    this.maxHeight = options.get('maxHeight');
 
     decorated.call(this, $element, options);
   }
@@ -4034,11 +4132,6 @@ S2.define('select2/dropdown/attachBody',[
   AttachBody.prototype._positionDropdown = function () {
     var $window = $(window);
 
-    var isCurrentlyAbove = this.$dropdown.hasClass('select2-dropdown--above');
-    var isCurrentlyBelow = this.$dropdown.hasClass('select2-dropdown--below');
-
-    var newDirection = null;
-
     var position = this.$container.position();
     var offset = this.$container.offset();
 
@@ -4060,30 +4153,34 @@ S2.define('select2/dropdown/attachBody',[
       bottom: $window.scrollTop() + $window.height()
     };
 
-    var enoughRoomAbove = viewport.top < (offset.top - dropdown.height);
-    var enoughRoomBelow = viewport.bottom > (offset.bottom + dropdown.height);
+    var currentDirection = null;
+    if (this.$dropdown.hasClass('select2-dropdown--below')) {
+      currentDirection = 'below';
+    }
+    else if (this.$dropdown.hasClass('select2-dropdown--above')) {
+      currentDirection = 'above';
+    }
+
+    var newDirection = 'below';
+
+    var roomAbove = offset.top - viewport.top;
+    var roomBelow = viewport.bottom - offset.bottom;
 
     var css = {
       left: offset.left,
       top: container.bottom
     };
 
-    if (!isCurrentlyAbove && !isCurrentlyBelow) {
-      newDirection = 'below';
-    }
-
-    if (!enoughRoomBelow && enoughRoomAbove && !isCurrentlyAbove) {
+    var aboveThreshold = 100;
+    if (roomAbove - aboveThreshold > roomBelow) {
       newDirection = 'above';
-    } else if (!enoughRoomAbove && enoughRoomBelow && isCurrentlyAbove) {
-      newDirection = 'below';
     }
 
-    if (newDirection == 'above' ||
-      (isCurrentlyAbove && newDirection !== 'below')) {
-      css.top = container.top - dropdown.height;
+    if (newDirection == 'above') {
+      css.top = container.top - roomAbove;
     }
 
-    if (newDirection != null) {
+    if (newDirection != currentDirection) {
       this.$dropdown
         .removeClass('select2-dropdown--below select2-dropdown--above')
         .addClass('select2-dropdown--' + newDirection);
@@ -4091,6 +4188,25 @@ S2.define('select2/dropdown/attachBody',[
         .removeClass('select2-container--below select2-container--above')
         .addClass('select2-container--' + newDirection);
     }
+
+    var maxHeight;
+    var windowMargin = 10;
+    if (newDirection == 'below') {
+      maxHeight = roomBelow;
+      maxHeight -= 40 + windowMargin;
+    }
+    else {
+      maxHeight = roomAbove;
+      maxHeight -= 40 + windowMargin - 1;
+      css.top += windowMargin;
+    }
+
+    if (this.maxHeight != 'auto' && maxHeight > this.maxHeight) {
+      maxHeight = this.maxHeight;
+    }
+
+    this.$dropdown.find('.select2-results__options')
+      .css('max-height', maxHeight);
 
     this.$dropdownContainer.css(css);
   };
@@ -4216,6 +4332,49 @@ S2.define('select2/dropdown/closeOnSelect',[
   return CloseOnSelect;
 });
 
+S2.define('select2/dropdown/multipleButtons',[
+  'jquery',
+  '../utils'
+], function ($, Utils) {
+  function MultipleButtons () { }
+
+  MultipleButtons.prototype.render = function (decorated) {
+    var $rendered = decorated.call(this);
+
+    var $buttons = $(
+      '<div class="btn-group btn-group-justified" style="padding: 2px">' +
+        '<button id="select2-selectall" ' +
+        'class="btn btn-xs btn-default" style="width:50%; max-height: 20px">' +
+        'All</button>' +
+        '<button id="select2-deselectall" ' +
+        'class="btn btn-xs btn-default" style="width:50%; max-height: 20px">' +
+        'None</button>' +
+      '</div>'
+    );
+
+    this.$buttons = $buttons;
+
+    $rendered.prepend($buttons);
+
+    return $rendered;
+  };
+
+  MultipleButtons.prototype.bind = function (decorated, container, $container) {
+    var self = this;
+
+    decorated.call(this, container, $container);
+
+    this.$buttons.find('#select2-selectall').click(function () {
+      self.$element.val([]).trigger('change');
+    });
+    this.$buttons.find('#select2-deselectall').click(function () {
+      self.$element.val([]).trigger('change');
+    });
+  };
+
+  return MultipleButtons;
+});
+
 S2.define('select2/i18n/en',[],function () {
   // English
   return {
@@ -4269,6 +4428,7 @@ S2.define('select2/defaults',[
 
   './selection/single',
   './selection/multiple',
+  './selection/multiplecount',
   './selection/placeholder',
   './selection/allowClear',
   './selection/search',
@@ -4295,14 +4455,15 @@ S2.define('select2/defaults',[
   './dropdown/minimumResultsForSearch',
   './dropdown/selectOnClose',
   './dropdown/closeOnSelect',
+  './dropdown/multipleButtons',
 
   './i18n/en'
 ], function ($, require,
 
              ResultsList,
 
-             SingleSelection, MultipleSelection, Placeholder, AllowClear,
-             SelectionSearch, EventRelay,
+             SingleSelection, MultipleSelection, MultipleCountSelection,
+             Placeholder, AllowClear, SelectionSearch, EventRelay,
 
              Utils, Translation, DIACRITICS,
 
@@ -4311,6 +4472,7 @@ S2.define('select2/defaults',[
 
              Dropdown, DropdownSearch, HidePlaceholder, InfiniteScroll,
              AttachBody, MinimumResultsForSearch, SelectOnClose, CloseOnSelect,
+             MultipleButtons,
 
              EnglishTranslation) {
   function Defaults () {
@@ -4407,7 +4569,16 @@ S2.define('select2/defaults',[
 
     if (options.dropdownAdapter == null) {
       if (options.multiple) {
-        options.dropdownAdapter = Dropdown;
+        if (options.multipleMode == 1) {
+          options.dropdownAdapter = Dropdown;
+        }
+        else {
+          options.dropdownAdapter = Utils.Decorate(
+            Dropdown, DropdownSearch);
+          options.dropdownAdapter = Utils.Decorate(
+            options.dropdownAdapter,
+            MultipleButtons);
+        }
       } else {
         var SearchableDropdown = Utils.Decorate(Dropdown, DropdownSearch);
 
@@ -4449,7 +4620,12 @@ S2.define('select2/defaults',[
 
     if (options.selectionAdapter == null) {
       if (options.multiple) {
-        options.selectionAdapter = MultipleSelection;
+        if (options.multipleMode == 1) {
+          options.selectionAdapter = MultipleSelection;
+        }
+        else {
+          options.selectionAdapter = MultipleCountSelection;
+        }
       } else {
         options.selectionAdapter = SingleSelection;
       }
@@ -4469,7 +4645,7 @@ S2.define('select2/defaults',[
         );
       }
 
-      if (options.multiple) {
+      if (options.multiple && options.multipleMode == 1) {
         options.selectionAdapter = Utils.Decorate(
           options.selectionAdapter,
           SelectionSearch
@@ -4637,7 +4813,10 @@ S2.define('select2/defaults',[
         return selection.text;
       },
       theme: 'default',
-      width: 'resolve'
+      width: 'resolve',
+      maxSelectCount: 3,
+      multipleMode: 0,
+      maxHeight: 'auto'
     };
   };
 
@@ -4914,6 +5093,14 @@ S2.define('select2/core',[
 
       if (elementWidth <= 0) {
         return 'auto';
+      }
+
+      var minWidth = 50;
+      if (this.options.get('multiple')) {
+        minWidth = 100;
+      }
+      if (elementWidth < minWidth) {
+        elementWidth = minWidth;
       }
 
       return elementWidth + 'px';
