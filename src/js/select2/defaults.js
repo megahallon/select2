@@ -6,6 +6,7 @@ define([
 
   './selection/single',
   './selection/multiple',
+  './selection/multiplecount',
   './selection/placeholder',
   './selection/allowClear',
   './selection/search',
@@ -32,14 +33,15 @@ define([
   './dropdown/minimumResultsForSearch',
   './dropdown/selectOnClose',
   './dropdown/closeOnSelect',
+  './dropdown/multipleButtons',
 
   './i18n/en'
 ], function ($, require,
 
              ResultsList,
 
-             SingleSelection, MultipleSelection, Placeholder, AllowClear,
-             SelectionSearch, EventRelay,
+             SingleSelection, MultipleSelection, MultipleCountSelection,
+             Placeholder, AllowClear, SelectionSearch, EventRelay,
 
              Utils, Translation, DIACRITICS,
 
@@ -48,6 +50,7 @@ define([
 
              Dropdown, DropdownSearch, HidePlaceholder, InfiniteScroll,
              AttachBody, MinimumResultsForSearch, SelectOnClose, CloseOnSelect,
+             MultipleButtons,
 
              EnglishTranslation) {
   function Defaults () {
@@ -144,7 +147,16 @@ define([
 
     if (options.dropdownAdapter == null) {
       if (options.multiple) {
-        options.dropdownAdapter = Dropdown;
+        if (options.multipleMode == 1) {
+          options.dropdownAdapter = Dropdown;
+        }
+        else {
+          options.dropdownAdapter = Utils.Decorate(
+            Dropdown, DropdownSearch);
+          options.dropdownAdapter = Utils.Decorate(
+            options.dropdownAdapter,
+            MultipleButtons);
+        }
       } else {
         var SearchableDropdown = Utils.Decorate(Dropdown, DropdownSearch);
 
@@ -186,7 +198,12 @@ define([
 
     if (options.selectionAdapter == null) {
       if (options.multiple) {
-        options.selectionAdapter = MultipleSelection;
+        if (options.multipleMode == 1) {
+          options.selectionAdapter = MultipleSelection;
+        }
+        else {
+          options.selectionAdapter = MultipleCountSelection;
+        }
       } else {
         options.selectionAdapter = SingleSelection;
       }
@@ -206,7 +223,7 @@ define([
         );
       }
 
-      if (options.multiple) {
+      if (options.multiple && options.multipleMode == 1) {
         options.selectionAdapter = Utils.Decorate(
           options.selectionAdapter,
           SelectionSearch
@@ -375,6 +392,8 @@ define([
       },
       theme: 'default',
       width: 'resolve',
+      maxSelectCount: 3,
+      multipleMode: 0,
       maxHeight: 'auto'
     };
   };
