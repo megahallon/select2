@@ -44,5 +44,11 @@
   width: 1px;
 }
 
+.select2-divider {
+  height: 1px;
+  padding: 0;
+  background-color: #eee;
+}
+
 @import "theme/default/layout";
 @import "theme/classic/layout";

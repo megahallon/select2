@@ -212,7 +212,8 @@ define([
         text: $option.text(),
         disabled: $option.prop('disabled'),
         selected: $option.prop('selected'),
-        title: $option.prop('title')
+        title: $option.prop('title'),
+        divider: $option.attr('data-divider') !== undefined,
       };
     } else if ($option.is('optgroup')) {
       data = {
