@@ -226,7 +226,11 @@ define([
       $option.append(label);
       $option.append($childrenContainer);
     } else {
-      this.template(data, option);
+      if (data.content) {
+        $(option).html(data.content);
+      } else {
+        this.template(data, option);
+      }
     }
 
     $.data(option, 'data', data);

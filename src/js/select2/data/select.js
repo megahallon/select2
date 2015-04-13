@@ -214,6 +214,7 @@ define([
         selected: $option.prop('selected'),
         title: $option.prop('title'),
         divider: $option.attr('data-divider') !== undefined,
+        content: $option.attr('data-content')
       };
     } else if ($option.is('optgroup')) {
       data = {
