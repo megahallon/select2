@@ -160,6 +160,11 @@ define([
       'aria-selected': 'false'
     };
 
+    if (data.divider) {
+      option.className += ' select2-divider';
+      return option;
+    }
+
     if (data.disabled) {
       delete attrs['aria-selected'];
       attrs['aria-disabled'] = 'true';
@@ -192,7 +197,7 @@ define([
     if (data.children) {
       var $option = $(option);
 
-      var label = document.createElement('strong');
+      var label = document.createElement('span');
       label.className = 'select2-results__group';
 
       var $label = $(label);
@@ -213,6 +218,10 @@ define([
       });
 
       $childrenContainer.append($children);
+
+      var divider = document.createElement('li');
+      divider.className = 'select2-divider';
+      $option.append(divider);
 
       $option.append(label);
       $option.append($childrenContainer);
