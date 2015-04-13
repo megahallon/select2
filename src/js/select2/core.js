@@ -134,6 +134,14 @@ define([
         return 'auto';
       }
 
+      var minWidth = 50;
+      if (this.options.get('multiple')) {
+        minWidth = 100;
+      }
+      if (elementWidth < minWidth) {
+        elementWidth = minWidth;
+      }
+
       return elementWidth + 'px';
     }
 
