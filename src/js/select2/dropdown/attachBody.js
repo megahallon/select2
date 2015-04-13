@@ -4,6 +4,7 @@ define([
 ], function ($, Utils) {
   function AttachBody (decorated, $element, options) {
     this.$dropdownParent = options.get('dropdownParent') || document.body;
+    this.maxHeight = options.get('maxHeight');
 
     decorated.call(this, $element, options);
   }
@@ -115,11 +116,6 @@ define([
   AttachBody.prototype._positionDropdown = function () {
     var $window = $(window);
 
-    var isCurrentlyAbove = this.$dropdown.hasClass('select2-dropdown--above');
-    var isCurrentlyBelow = this.$dropdown.hasClass('select2-dropdown--below');
-
-    var newDirection = null;
-
     var position = this.$container.position();
     var offset = this.$container.offset();
 
@@ -141,30 +137,34 @@ define([
       bottom: $window.scrollTop() + $window.height()
     };
 
-    var enoughRoomAbove = viewport.top < (offset.top - dropdown.height);
-    var enoughRoomBelow = viewport.bottom > (offset.bottom + dropdown.height);
+    var currentDirection = null;
+    if (this.$dropdown.hasClass('select2-dropdown--below')) {
+      currentDirection = 'below';
+    }
+    else if (this.$dropdown.hasClass('select2-dropdown--above')) {
+      currentDirection = 'above';
+    }
+
+    var newDirection = 'below';
+
+    var roomAbove = offset.top - viewport.top;
+    var roomBelow = viewport.bottom - offset.bottom;
 
     var css = {
       left: offset.left,
       top: container.bottom
     };
 
-    if (!isCurrentlyAbove && !isCurrentlyBelow) {
-      newDirection = 'below';
-    }
-
-    if (!enoughRoomBelow && enoughRoomAbove && !isCurrentlyAbove) {
+    var aboveThreshold = 100;
+    if (roomAbove - aboveThreshold > roomBelow) {
       newDirection = 'above';
-    } else if (!enoughRoomAbove && enoughRoomBelow && isCurrentlyAbove) {
-      newDirection = 'below';
     }
 
-    if (newDirection == 'above' ||
-      (isCurrentlyAbove && newDirection !== 'below')) {
-      css.top = container.top - dropdown.height;
+    if (newDirection == 'above') {
+      css.top = container.top - roomAbove;
     }
 
-    if (newDirection != null) {
+    if (newDirection != currentDirection) {
       this.$dropdown
         .removeClass('select2-dropdown--below select2-dropdown--above')
         .addClass('select2-dropdown--' + newDirection);
@@ -172,6 +172,25 @@ define([
         .removeClass('select2-container--below select2-container--above')
         .addClass('select2-container--' + newDirection);
     }
+
+    var maxHeight;
+    var windowMargin = 10;
+    if (newDirection == 'below') {
+      maxHeight = roomBelow;
+      maxHeight -= 40 + windowMargin;
+    }
+    else {
+      maxHeight = roomAbove;
+      maxHeight -= 40 + windowMargin - 1;
+      css.top += windowMargin;
+    }
+
+    if (this.maxHeight != 'auto' && maxHeight > this.maxHeight) {
+      maxHeight = this.maxHeight;
+    }
+
+    this.$dropdown.find('.select2-results__options')
+      .css('max-height', maxHeight);
 
     this.$dropdownContainer.css(css);
   };
