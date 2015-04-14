@@ -338,10 +338,9 @@ define([
     });
   };
 
-  Select2.prototype._syncAttributes = function () {
-    this.options.set('disabled', this.$element.prop('disabled'));
-
-    if (this.options.get('disabled')) {
+  Select2.prototype._syncSelectDisable = function (disabled) {
+    this.options.set('disabled', disabled);
+    if (disabled) {
       if (this.isOpen()) {
         this.close();
       }
@@ -350,6 +349,71 @@ define([
     } else {
       this.trigger('enable');
     }
+  }
+
+  Select2.prototype._syncOptionDisable = function (index, disabled) {
+    if (data) {
+      data.disabled = disabled;
+      console.log('sync option ' + data._resultId + ' disable ' + disabled);
+    }
+  }
+
+  Select2.prototype._syncOptionSelect = function (index, selected) {
+    console.log('sync option ' + index + ' selected ' + selected);
+
+    var self = this;
+    this.dataAdapter.current(function (data) {
+      self.trigger('selection:update', {
+        data: data
+      });
+    });
+  }
+
+  Select2.prototype._syncAttributes = function (index, mutation) {
+    if (mutation) {
+      var attribute = mutation.target.attributes[mutation.attributeName];
+      var targetTag = mutation.target.tagName;
+      var value;
+      var haveValue = false;
+      if (typeof attribute !== 'undefined') {
+        value = attribute.value;
+        haveValue = true;
+      }
+      if (targetTag == 'SELECT') {
+        if (mutation.attributeName == 'disabled') {
+          this._syncSelectDisable(haveValue);
+          return;
+        }
+      }
+      else if (targetTag == 'OPTION') {
+        if (mutation.attributeName == 'disabled') {
+          var data = jQuery(mutation.target).data('data');
+          this._syncOptionDisable(data, haveValue);
+          return;
+        }
+        else if (mutation.attributeName == 'selected') {
+          this._syncOptionSelect(mutation.target.index, haveValue);
+          return;
+        }
+      }
+      console.log('--mutation--');
+      if (mutation.addedNodes.length) {
+        console.log("Add nodes");
+        console.log(mutation.addedNodes);
+      }
+      if (mutation.removedNodes.length) {
+        console.log("Removed nodes");
+        console.log(mutation.removedNodes);
+      }
+      console.log(mutation.attributeName);
+      console.log(mutation.target.tagName);
+      console.log(mutation.target.id);
+      console.log(mutation.target.attributes[mutation.attributeName].value);
+      console.log('-------------');
+      return;
+    }
+
+    this._syncSelectDisable(this.$element.prop('disabled'));
   };
 
   /**
