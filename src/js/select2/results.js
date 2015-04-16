@@ -119,8 +119,11 @@ define([
 
       var $selected = $options.filter('[aria-selected=true]');
 
-      // Check if there are any selected options
-      if ($selected.length > 0) {
+      var $highlighted = self.getHighlightedResults();
+      if ($highlighted.length > 0) {
+        $highlighted.first().trigger('mouseenter');
+      }
+      else if ($selected.length > 0) {
         // If there are selected options, highlight the first
         $selected.first().trigger('mouseenter');
       } else {
