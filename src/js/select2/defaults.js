@@ -170,7 +170,8 @@ define([
         );
       }
 
-      if (options.closeOnSelect) {
+      if (options.closeOnSelect
+          && (options.closeOnSelect != 'auto' || !options.multiple)) {
         options.dropdownAdapter = Utils.Decorate(
           options.dropdownAdapter,
           CloseOnSelect
@@ -371,7 +372,7 @@ define([
     this.defaults = {
       amdBase: './',
       amdLanguageBase: './i18n/',
-      closeOnSelect: true,
+      closeOnSelect: 'auto',
       debug: false,
       escapeMarkup: Utils.escapeMarkup,
       language: EnglishTranslation,
