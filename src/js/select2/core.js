@@ -136,7 +136,7 @@ define([
 
       var minWidth = 50;
       if (this.options.get('multiple')) {
-        minWidth = 100;
+        minWidth = 130;
       }
       if (elementWidth < minWidth) {
         elementWidth = minWidth;
@@ -291,6 +291,24 @@ define([
           query: params
         });
       });
+    });
+
+    this.on('select:all', function () {
+      var $options = self.$element.children();
+      $options.each(function () {
+        this.selected = true;
+      });
+      self.$element.trigger('change');
+      self.trigger('results:render');
+    });
+
+    this.on('select:none', function () {
+      var $options = self.$element.children();
+      $options.each(function () {
+        this.selected = false;
+      });
+      self.$element.trigger('change');
+      self.trigger('results:render');
     });
 
     this.on('query:append', function (params) {

@@ -8,12 +8,12 @@ define([
     var $rendered = decorated.call(this);
 
     var $buttons = $(
-      '<div class="btn-group btn-group-justified" style="padding: 2px">' +
+      '<div class="btn-group btn-group-xs btn-group-justified" style="padding: 2px">' +
         '<button id="select2-selectall" ' +
-        'class="btn btn-xs btn-default" style="width:50%; max-height: 20px">' +
+        'class="btn btn-default" style="width:50%">' +
         'All</button>' +
         '<button id="select2-deselectall" ' +
-        'class="btn btn-xs btn-default" style="width:50%; max-height: 20px">' +
+        'class="btn tn-default" style="width:50%">' +
         'None</button>' +
       '</div>'
     );
@@ -31,10 +31,12 @@ define([
     decorated.call(this, container, $container);
 
     this.$buttons.find('#select2-selectall').click(function () {
-      self.$element.val([]).trigger('change');
+//      self.$element.val([]).trigger('change');
+      self.trigger('select:all');
     });
     this.$buttons.find('#select2-deselectall').click(function () {
-      self.$element.val([]).trigger('change');
+//      self.$element.val([]).trigger('change');
+      self.trigger('select:none');
     });
   };
 

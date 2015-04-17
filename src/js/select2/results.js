@@ -265,6 +265,12 @@ define([
       }
     });
 
+    container.on('results:render', function () {
+      if (container.isOpen()) {
+        self.setClasses();
+      }
+    });
+
     container.on('query', function (params) {
       self.showLoading(params);
     });
