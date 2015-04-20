@@ -192,7 +192,7 @@ define([
       maxHeight = this.maxHeight;
     }
 
-    this.$dropdown.find('.select2-results__options')
+    this.$dropdown.find('.select2-results > .select2-results__options')
       .css('max-height', maxHeight);
 
     this.$dropdownContainer.css(css);
