@@ -293,24 +293,6 @@ define([
       });
     });
 
-    this.on('select:all', function () {
-      var $options = self.$element.children();
-      $options.each(function () {
-        this.selected = true;
-      });
-      self.$element.trigger('change');
-      self.trigger('results:render');
-    });
-
-    this.on('select:none', function () {
-      var $options = self.$element.children();
-      $options.each(function () {
-        this.selected = false;
-      });
-      self.$element.trigger('change');
-      self.trigger('results:render');
-    });
-
     this.on('query:append', function (params) {
       this.dataAdapter.query(params, function (data) {
         self.trigger('results:append', {

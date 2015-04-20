@@ -31,12 +31,25 @@ define([
     decorated.call(this, container, $container);
 
     this.$buttons.find('#select2-selectall').click(function () {
-//      self.$element.val([]).trigger('change');
-      self.trigger('select:all');
+      var $options = container.$element.children();
+      $options.each(function () {
+        this.selected = false;
+      });
+
+      var $resultOptions = container.$results.find('li');
+      $resultOptions.each(function () {
+        jQuery(this).data('data').element.selected = true;
+      });
+      container.$element.trigger('change');
+      container.trigger('results:render');
     });
     this.$buttons.find('#select2-deselectall').click(function () {
-//      self.$element.val([]).trigger('change');
-      self.trigger('select:none');
+      var $resultOptions = container.$results.find('li');
+      $resultOptions.each(function () {
+        jQuery(this).data('data').element.selected = false;
+      });
+      container.$element.trigger('change');
+      container.trigger('results:render');
     });
   };
 
