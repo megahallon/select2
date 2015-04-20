@@ -125,6 +125,9 @@ define([
       height: this.$container.outerHeight(false)
     };
 
+    // Non-scrolling dropbox content, like searchbox and multiplebuttons
+    var dropDownOffset = this.$dropdown.find('.select2-results').offset().top - offset.bottom;
+
     container.top = offset.top;
     container.bottom = offset.top + container.height;
 
@@ -177,11 +180,11 @@ define([
     var windowMargin = 10;
     if (newDirection == 'below') {
       maxHeight = roomBelow;
-      maxHeight -= 40 + windowMargin;
+      maxHeight -= dropDownOffset + windowMargin;
     }
     else {
       maxHeight = roomAbove;
-      maxHeight -= 40 + windowMargin - 1;
+      maxHeight -= dropDownOffset + windowMargin - 1;
       css.top += windowMargin;
     }
 
