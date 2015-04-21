@@ -126,7 +126,8 @@ define([
     };
 
     // Non-scrolling dropbox content, like searchbox and multiplebuttons
-    var dropDownOffset = this.$dropdown.find('.select2-results').offset().top - offset.bottom;
+    var dropDownOffset = this.$dropdown.find('.select2-results').offset().top -
+                         this.$dropdown.offset().top;
 
     container.top = offset.top;
     container.bottom = offset.top + container.height;
@@ -163,10 +164,6 @@ define([
       newDirection = 'above';
     }
 
-    if (newDirection == 'above') {
-      css.top = container.top - roomAbove;
-    }
-
     if (newDirection != currentDirection) {
       this.$dropdown
         .removeClass('select2-dropdown--below select2-dropdown--above')
@@ -179,13 +176,11 @@ define([
     var maxHeight;
     var windowMargin = 10;
     if (newDirection == 'below') {
-      maxHeight = roomBelow;
-      maxHeight -= dropDownOffset + windowMargin;
+      maxHeight = roomBelow - dropDownOffset - windowMargin;
     }
     else {
-      maxHeight = roomAbove;
-      maxHeight -= dropDownOffset + windowMargin - 1;
-      css.top += windowMargin;
+      maxHeight = roomAbove - dropDownOffset - windowMargin;
+      css.top = container.top - roomAbove + windowMargin;
     }
 
     if (this.maxHeight != 'auto' && maxHeight > this.maxHeight) {
