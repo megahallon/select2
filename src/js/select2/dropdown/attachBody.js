@@ -119,22 +119,29 @@ define([
     var position = this.$container.position();
     var offset = this.$container.offset();
 
+    if ($window.scrollTop() > offset.top) {
+      return;
+    }
+
     offset.bottom = offset.top + this.$container.outerHeight(false);
 
     var container = {
       height: this.$container.outerHeight(false)
     };
 
-    // Non-scrolling dropbox content, like searchbox and multiplebuttons
-    var dropDownOffset = this.$dropdown.find('.select2-results').offset().top -
-                         this.$dropdown.offset().top;
-
     container.top = offset.top;
     container.bottom = offset.top + container.height;
+
+    this.$dropdown.find('.select2-results > .select2-results__options')
+      .css('max-height', '');
 
     var dropdown = {
       height: this.$dropdown.outerHeight(false)
     };
+
+    // Non-scrolling dropbox content, searchbox and multiplebuttons
+    var dropDownOffset = this.$dropdown.find('.select2-results').offset().top -
+                         this.$dropdown.offset().top;
 
     var viewport = {
       top: $window.scrollTop(),
@@ -160,7 +167,8 @@ define([
     };
 
     var aboveThreshold = 100;
-    if (roomAbove - aboveThreshold > roomBelow) {
+    if (dropdown.height > roomBelow
+        && roomAbove - aboveThreshold > roomBelow) {
       newDirection = 'above';
     }
 
@@ -173,15 +181,20 @@ define([
         .addClass('select2-container--' + newDirection);
     }
 
-    var maxHeight;
+    var maxHeight = dropdown.height;
     var windowMargin = 10;
     if (newDirection == 'below') {
-      maxHeight = roomBelow - dropDownOffset - windowMargin;
+      if (maxHeight > roomBelow) {
+        maxHeight = roomBelow - windowMargin;
+      }
     }
     else {
-      maxHeight = roomAbove - dropDownOffset - windowMargin;
-      css.top = container.top - roomAbove + windowMargin;
+      if (maxHeight > roomAbove) {
+        maxHeight = roomAbove - windowMargin;
+      }
+      css.top = container.top - maxHeight;
     }
+    maxHeight -= dropDownOffset;
 
     if (this.maxHeight != 'auto' && maxHeight > this.maxHeight) {
       maxHeight = this.maxHeight;
