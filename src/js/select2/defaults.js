@@ -374,6 +374,7 @@ define([
       amdLanguageBase: './i18n/',
       closeOnSelect: 'auto',
       debug: false,
+      dropdownAutoWidth: false,
       escapeMarkup: Utils.escapeMarkup,
       language: EnglishTranslation,
       matcher: matcher,
