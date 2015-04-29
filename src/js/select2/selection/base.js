@@ -98,7 +98,7 @@ define([
   BaseSelection.prototype._attachCloseHandler = function (container) {
     var self = this;
 
-    $(document.body).on('mousedown.select2.' + container.id, function (e) {
+    $(window).on('mousedown.select2.' + container.id, function (e) {
       var $target = $(e.target);
 
       var $select = $target.closest('.select2');
@@ -120,7 +120,7 @@ define([
   };
 
   BaseSelection.prototype._detachCloseHandler = function (container) {
-    $(document.body).off('mousedown.select2.' + container.id);
+    $(window).off('mousedown.select2.' + container.id);
   };
 
   BaseSelection.prototype.position = function ($selection, $container) {
