@@ -349,14 +349,14 @@ define([
     } else {
       this.trigger('enable');
     }
-  }
+  };
 
-  Select2.prototype._syncOptionDisable = function (index, disabled) {
+  Select2.prototype._syncOptionDisable = function (data, disabled) {
     if (data) {
       data.disabled = disabled;
       console.log('sync option ' + data._resultId + ' disable ' + disabled);
     }
-  }
+  };
 
   Select2.prototype._syncOptionSelect = function (index, selected) {
     console.log('sync option ' + index + ' selected ' + selected);
@@ -367,7 +367,7 @@ define([
         data: data
       });
     });
-  }
+  };
 
   Select2.prototype._syncAttributes = function (index, mutation) {
     if (mutation) {
@@ -387,7 +387,7 @@ define([
       }
       else if (targetTag == 'OPTION') {
         if (mutation.attributeName == 'disabled') {
-          var data = jQuery(mutation.target).data('data');
+          var data = $(mutation.target).data('data');
           this._syncOptionDisable(data, haveValue);
           return;
         }
@@ -398,11 +398,11 @@ define([
       }
       console.log('--mutation--');
       if (mutation.addedNodes.length) {
-        console.log("Add nodes");
+        console.log('Add nodes');
         console.log(mutation.addedNodes);
       }
       if (mutation.removedNodes.length) {
-        console.log("Removed nodes");
+        console.log('Removed nodes');
         console.log(mutation.removedNodes);
       }
       console.log(mutation.attributeName);
@@ -466,9 +466,9 @@ define([
       return;
     }
 
-    this.trigger('query', {});
-
-    this.trigger('open');
+    var openWithQuery = this.options.get('openWithQuery');
+    this.trigger('query', { term: openWithQuery });
+    // query will trigger open
   };
 
   Select2.prototype.close = function () {

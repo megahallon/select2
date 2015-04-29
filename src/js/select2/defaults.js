@@ -170,8 +170,8 @@ define([
         );
       }
 
-      if (options.closeOnSelect
-          && (options.closeOnSelect != 'auto' || !options.multiple)) {
+      if (options.closeOnSelect &&
+          (options.closeOnSelect != 'auto' || !options.multiple)) {
         options.dropdownAdapter = Utils.Decorate(
           options.dropdownAdapter,
           CloseOnSelect
@@ -395,7 +395,8 @@ define([
       width: 'resolve',
       maxSelectCount: 3,
       multipleMode: 0,
-      maxHeight: 'auto'
+      maxHeight: 'auto',
+      openWithQuery: ''
     };
   };
 

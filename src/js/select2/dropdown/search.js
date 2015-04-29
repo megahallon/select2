@@ -2,7 +2,11 @@ define([
   'jquery',
   '../utils'
 ], function ($, Utils) {
-  function Search () { }
+  function Search (decorated, $element, options) {
+    this.openWithQuery = options.get('openWithQuery');
+
+    decorated.call(this, $element, options);
+  }
 
   Search.prototype.render = function (decorated) {
     var $rendered = decorated.call(this);
@@ -54,6 +58,10 @@ define([
       window.setTimeout(function () {
         self.$search.focus();
       }, 0);
+
+      if (self.openWithQuery) {
+        self.$search.val(self.openWithQuery);
+      }
     });
 
     container.on('close', function () {

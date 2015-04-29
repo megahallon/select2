@@ -8,7 +8,8 @@ define([
     var $rendered = decorated.call(this);
 
     var $buttons = $(
-      '<div class="btn-group btn-group-xs btn-group-justified" style="padding: 2px">' +
+      '<div class="btn-group btn-group-xs btn-group-justified" ' +
+          'style="padding: 2px">' +
         '<button id="select2-selectall" ' +
         'class="btn btn-default" style="width:50%">' +
         'All</button>' +
@@ -38,7 +39,7 @@ define([
 
       var $resultOptions = container.$results.find('li');
       $resultOptions.each(function () {
-        jQuery(this).data('data').element.selected = true;
+        $(this).data('data').element.selected = true;
       });
       container.$element.trigger('change');
       container.trigger('results:render');
@@ -46,7 +47,7 @@ define([
     this.$buttons.find('#select2-deselectall').click(function () {
       var $resultOptions = container.$results.find('li');
       $resultOptions.each(function () {
-        jQuery(this).data('data').element.selected = false;
+        $(this).data('data').element.selected = false;
       });
       container.$element.trigger('change');
       container.trigger('results:render');

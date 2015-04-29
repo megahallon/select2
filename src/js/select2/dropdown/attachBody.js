@@ -167,8 +167,8 @@ define([
     };
 
     var aboveThreshold = 100;
-    if (dropdown.height > roomBelow
-        && roomAbove - aboveThreshold > roomBelow) {
+    if (dropdown.height > roomBelow &&
+        roomAbove - aboveThreshold > roomBelow) {
       newDirection = 'above';
     }
 
