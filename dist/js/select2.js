@@ -1517,7 +1517,16 @@ S2.define('select2/selection/single',[
     var selection = data[0];
 
     var $rendered = this.$selection.find('.select2-selection__rendered');
-    var formatted = this.display(selection, $rendered);
+    var formatted;
+    if (selection.content) {
+      formatted = selection.content;
+    }
+    else if (selection.title) {
+      formatted = selection.title;
+    }
+    else {
+      formatted = this.display(selection, $rendered);
+    }
 
     $rendered.empty().append(formatted);
     $rendered.prop('title', selection.title || selection.text);
@@ -1675,6 +1684,10 @@ S2.define('select2/selection/multiplecount',[
     var escapeMarkup = this.options.get('escapeMarkup');
 
     return escapeMarkup(template(data));
+  };
+
+  MultipleCountSelection.prototype.selectionContainer = function () {
+    return $('<span></span>');
   };
 
   MultipleCountSelection.prototype.update = function (data) {
@@ -4153,6 +4166,7 @@ S2.define('select2/dropdown/attachBody',[
     var offset = this.$container.offset();
 
     if ($window.scrollTop() > offset.top) {
+      this.trigger('close');
       return;
     }
 
@@ -5124,7 +5138,8 @@ S2.define('select2/core',[
 
     var width = this._resolveWidth(this.$element, this.options.get('width'));
 
-    if (width != null) {
+    if (width != null &&
+        $container.css('display') != 'block') {
       $container.css('width', width);
     }
   };
@@ -5155,6 +5170,11 @@ S2.define('select2/core',[
       }
       if (elementWidth < minWidth) {
         elementWidth = minWidth;
+      }
+
+      var maxWidth = $element.css('max-width');
+      if (maxWidth > 0 && elementWidth > maxWidth) {
+        elementWidth = maxWidth;
       }
 
       return elementWidth + 'px';

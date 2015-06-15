@@ -109,8 +109,8 @@ define([
 
     var width = this._resolveWidth(this.$element, this.options.get('width'));
 
-    if (width != null
-        && $container.css('display') != 'block') {
+    if (width != null &&
+        $container.css('display') != 'block') {
       $container.css('width', width);
     }
   };
