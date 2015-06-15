@@ -83,7 +83,16 @@ define([
     var selection = data[0];
 
     var $rendered = this.$selection.find('.select2-selection__rendered');
-    var formatted = this.display(selection, $rendered);
+    var formatted;
+    if (selection.content) {
+      formatted = selection.content;
+    }
+    else if (selection.title) {
+      formatted = selection.title;
+    }
+    else {
+      formatted = this.display(selection, $rendered);
+    }
 
     $rendered.empty().append(formatted);
     $rendered.prop('title', selection.title || selection.text);
