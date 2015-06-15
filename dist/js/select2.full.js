@@ -5431,20 +5431,6 @@ S2.define('select2/core',[
           return;
         }
       }
-      console.log('--mutation--');
-      if (mutation.addedNodes.length) {
-        console.log('Add nodes');
-        console.log(mutation.addedNodes);
-      }
-      if (mutation.removedNodes.length) {
-        console.log('Removed nodes');
-        console.log(mutation.removedNodes);
-      }
-      console.log(mutation.attributeName);
-      console.log(mutation.target.tagName);
-      console.log(mutation.target.id);
-      console.log(mutation.target.attributes[mutation.attributeName].value);
-      console.log('-------------');
       return;
     }
 
