@@ -47,6 +47,10 @@ define([
     return escapeMarkup(template(data));
   };
 
+  MultipleCountSelection.prototype.selectionContainer = function () {
+    return $('<span></span>');
+  };
+
   MultipleCountSelection.prototype.update = function (data) {
     this.clear();
 
