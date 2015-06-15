@@ -5177,7 +5177,7 @@ S2.define('select2/core',[
         elementWidth = maxWidth;
       }
 
-      return elementWidth + 'px';
+      return (6 + elementWidth) + 'px';
     }
 
     if (method == 'style') {
