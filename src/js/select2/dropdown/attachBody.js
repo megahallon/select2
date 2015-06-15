@@ -120,6 +120,7 @@ define([
     var offset = this.$container.offset();
 
     if ($window.scrollTop() > offset.top) {
+      this.trigger('close');
       return;
     }
 
