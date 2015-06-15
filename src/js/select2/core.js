@@ -109,7 +109,8 @@ define([
 
     var width = this._resolveWidth(this.$element, this.options.get('width'));
 
-    if (width != null) {
+    if (width != null
+        && $container.css('display') != 'block') {
       $container.css('width', width);
     }
   };
@@ -140,6 +141,11 @@ define([
       }
       if (elementWidth < minWidth) {
         elementWidth = minWidth;
+      }
+
+      var maxWidth = $element.css('max-width');
+      if (maxWidth > 0 && elementWidth > maxWidth) {
+        elementWidth = maxWidth;
       }
 
       return elementWidth + 'px';
