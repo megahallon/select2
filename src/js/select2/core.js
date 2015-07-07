@@ -148,7 +148,7 @@ define([
         elementWidth = maxWidth;
       }
 
-      return (6 + elementWidth) + 'px';
+      return elementWidth + 'px';
     }
 
     if (method == 'style') {
