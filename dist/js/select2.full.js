@@ -1341,7 +1341,7 @@ S2.define('select2/selection/base',[
     });
 
     this.$selection.on('blur', function (evt) {
-      self.trigger('blur', evt);
+      self._handleBlur(evt);
     });
 
     this.$selection.on('keydown', function (evt) {
@@ -1386,6 +1386,24 @@ S2.define('select2/selection/base',[
     container.on('disable', function () {
       self.$selection.attr('tabindex', '-1');
     });
+  };
+
+  BaseSelection.prototype._handleBlur = function (evt) {
+    var self = this;
+
+    // This needs to be delayed as the actve element is the body when the tab
+    // key is pressed, possibly along with others.
+    window.setTimeout(function () {
+      // Don't trigger `blur` if the focus is still in the selection
+      if (
+        (document.activeElement == self.$selection[0]) ||
+        ($.contains(self.$selection[0], document.activeElement))
+      ) {
+        return;
+      }
+
+      self.trigger('blur', evt);
+    }, 1);
   };
 
   BaseSelection.prototype._attachCloseHandler = function (container) {
@@ -1894,6 +1912,8 @@ S2.define('select2/selection/search',[
 
     var $rendered = decorated.call(this);
 
+    this._transferTabIndex();
+
     return $rendered;
   };
 
@@ -1903,24 +1923,26 @@ S2.define('select2/selection/search',[
     decorated.call(this, container, $container);
 
     container.on('open', function () {
-      self.$search.attr('tabindex', 0);
-
-      self.$search.focus();
+      self.$search.trigger('focus');
     });
 
     container.on('close', function () {
-      self.$search.attr('tabindex', -1);
-
       self.$search.val('');
-      self.$search.focus();
+      self.$search.trigger('focus');
     });
 
     container.on('enable', function () {
       self.$search.prop('disabled', false);
+
+      self._transferTabIndex();
     });
 
     container.on('disable', function () {
       self.$search.prop('disabled', true);
+    });
+
+    container.on('focus', function (evt) {
+      self.$search.trigger('focus');
     });
 
     this.$selection.on('focusin', '.select2-search--inline', function (evt) {
@@ -1928,7 +1950,7 @@ S2.define('select2/selection/search',[
     });
 
     this.$selection.on('focusout', '.select2-search--inline', function (evt) {
-      self.trigger('blur', evt);
+      self._handleBlur(evt);
     });
 
     this.$selection.on('keydown', '.select2-search--inline', function (evt) {
@@ -1964,8 +1986,32 @@ S2.define('select2/selection/search',[
 
     this.$selection.on('keyup.search input', '.select2-search--inline',
         function (evt) {
+      var key = evt.which;
+
+      // We can freely ignore events from modifier keys
+      if (key == KEYS.SHIFT || key == KEYS.CTRL || key == KEYS.ALT) {
+        return;
+      }
+
+      // Tabbing will be handled during the `keydown` phase
+      if (key == KEYS.TAB) {
+        return;
+      }
+
       self.handleSearch(evt);
     });
+  };
+
+  /**
+   * This method will transfer the tabindex attribute from the rendered
+   * selection to the search box. This allows for the search box to be used as
+   * the primary focus instead of the selection container.
+   *
+   * @private
+   */
+  Search.prototype._transferTabIndex = function (decorated) {
+    this.$search.attr('tabindex', this.$selection.attr('tabindex'));
+    this.$selection.attr('tabindex', '-1');
   };
 
   Search.prototype.createPlaceholder = function (decorated, placeholder) {
@@ -1973,6 +2019,8 @@ S2.define('select2/selection/search',[
   };
 
   Search.prototype.update = function (decorated, data) {
+    var searchHadFocus = this.$search[0] == document.activeElement;
+
     this.$search.attr('placeholder', '');
 
     decorated.call(this, data);
@@ -1981,6 +2029,9 @@ S2.define('select2/selection/search',[
                    .append(this.$searchContainer);
 
     this.resizeSearch();
+    if (searchHadFocus) {
+      this.$search.focus();
+    }
   };
 
   Search.prototype.handleSearch = function () {
@@ -5107,8 +5158,8 @@ S2.define('select2/core',[
 
     // Hide the original select
     $element.addClass('select2-hidden-accessible');
-	$element.attr('aria-hidden', 'true');
-	
+    $element.attr('aria-hidden', 'true');
+
     // Synchronize any monitored attributes
     this._syncAttributes();
 
@@ -5177,7 +5228,7 @@ S2.define('select2/core',[
         elementWidth = maxWidth;
       }
 
-      return (6 + elementWidth) + 'px';
+      return elementWidth + 'px';
     }
 
     if (method == 'style') {
@@ -5257,10 +5308,14 @@ S2.define('select2/core',[
 
   Select2.prototype._registerSelectionEvents = function () {
     var self = this;
-    var nonRelayEvents = ['toggle'];
+    var nonRelayEvents = ['toggle', 'focus'];
 
     this.selection.on('toggle', function () {
       self.toggleDropdown();
+    });
+
+    this.selection.on('focus', function (params) {
+      self.focus(params);
     });
 
     this.selection.on('*', function (name, params) {
@@ -5307,10 +5362,6 @@ S2.define('select2/core',[
       self.$container.addClass('select2-container--disabled');
     });
 
-    this.on('focus', function () {
-      self.$container.addClass('select2-container--focus');
-    });
-
     this.on('blur', function () {
       self.$container.removeClass('select2-container--focus');
     });
@@ -5341,7 +5392,12 @@ S2.define('select2/core',[
       var key = evt.which;
 
       if (self.isOpen()) {
-        if (key === KEYS.ENTER) {
+        if (key === KEYS.ESC || key === KEYS.TAB ||
+            (key === KEYS.UP && evt.altKey)) {
+          self.close();
+
+          evt.preventDefault();
+        } else if (key === KEYS.ENTER) {
           self.trigger('results:select');
 
           evt.preventDefault();
@@ -5357,14 +5413,10 @@ S2.define('select2/core',[
           self.trigger('results:next');
 
           evt.preventDefault();
-        } else if (key === KEYS.ESC || key === KEYS.TAB) {
-          self.close();
-
-          evt.preventDefault();
         }
       } else {
         if (key === KEYS.ENTER || key === KEYS.SPACE ||
-            ((key === KEYS.DOWN || key === KEYS.UP) && evt.altKey)) {
+            (key === KEYS.DOWN && evt.altKey)) {
           self.open();
 
           evt.preventDefault();
@@ -5504,6 +5556,20 @@ S2.define('select2/core',[
     return this.$container.hasClass('select2-container--open');
   };
 
+  Select2.prototype.hasFocus = function () {
+    return this.$container.hasClass('select2-container--focus');
+  };
+
+  Select2.prototype.focus = function (data) {
+    // No need to re-trigger focus events if we are already focused
+    if (this.hasFocus()) {
+      return;
+    }
+
+    this.$container.addClass('select2-container--focus');
+    this.trigger('focus');
+  };
+
   Select2.prototype.enable = function (args) {
     if (this.options.get('debug') && window.console && console.warn) {
       console.warn(
@@ -5584,7 +5650,7 @@ S2.define('select2/core',[
     this.$element.attr('tabindex', this.$element.data('old-tabindex'));
 
     this.$element.removeClass('select2-hidden-accessible');
-	this.$element.attr('aria-hidden', 'false');
+    this.$element.attr('aria-hidden', 'false');
     this.$element.removeData('select2');
 
     this.dataAdapter.destroy();
