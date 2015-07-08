@@ -8,14 +8,9 @@ define([
     var $rendered = decorated.call(this);
 
     var $buttons = $(
-      '<div class="btn-group btn-group-xs btn-group-justified" ' +
-          'style="padding: 2px">' +
-        '<button id="select2-selectall" ' +
-        'class="btn btn-default" style="width:50%">' +
-        'All</button>' +
-        '<button id="select2-deselectall" ' +
-        'class="btn tn-default" style="width:50%">' +
-        'None</button>' +
+      '<div class="select2-multiple-buttons-group">' +
+        '<button class="select2-selectall">All</button>' +
+        '<button class="select2-deselectall">None</button>' +
       '</div>'
     );
 
@@ -37,7 +32,7 @@ define([
         this.selected = false;
       });
 
-      var $resultOptions = container.$results.find('li');
+      var $resultOptions = container.$results.find('li[role=treeitem]');
       $resultOptions.each(function () {
         $(this).data('data').element.selected = true;
       });
@@ -45,7 +40,7 @@ define([
       container.trigger('results:render');
     });
     this.$buttons.find('#select2-deselectall').click(function () {
-      var $resultOptions = container.$results.find('li');
+      var $resultOptions = container.$results.find('li[role=treeitem]');
       $resultOptions.each(function () {
         $(this).data('data').element.selected = false;
       });
