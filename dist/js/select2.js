@@ -4460,7 +4460,7 @@ S2.define('select2/dropdown/multipleButtons',[
 
     decorated.call(this, container, $container);
 
-    this.$buttons.find('#select2-selectall').click(function () {
+    this.$buttons.find('.select2-selectall').click(function () {
       var $options = container.$element.children();
       $options.each(function () {
         this.selected = false;
@@ -4473,7 +4473,7 @@ S2.define('select2/dropdown/multipleButtons',[
       container.$element.trigger('change');
       container.trigger('results:render');
     });
-    this.$buttons.find('#select2-deselectall').click(function () {
+    this.$buttons.find('.select2-deselectall').click(function () {
       var $resultOptions = container.$results.find('li[role=treeitem]');
       $resultOptions.each(function () {
         $(this).data('data').element.selected = false;
