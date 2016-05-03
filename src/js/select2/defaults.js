@@ -19,6 +19,7 @@ define([
   './data/select',
   './data/array',
   './data/ajax',
+  './data/defer',
   './data/tags',
   './data/tokenizer',
   './data/minimumInputLength',
@@ -29,6 +30,7 @@ define([
   './dropdown/search',
   './dropdown/hidePlaceholder',
   './dropdown/infiniteScroll',
+  './dropdown/deferScroll',
   './dropdown/attachBody',
   './dropdown/minimumResultsForSearch',
   './dropdown/selectOnClose',
@@ -45,12 +47,12 @@ define([
 
              Utils, Translation, DIACRITICS,
 
-             SelectData, ArrayData, AjaxData, Tags, Tokenizer,
+             SelectData, ArrayData, AjaxData, DeferData, Tags, Tokenizer,
              MinimumInputLength, MaximumInputLength, MaximumSelectionLength,
 
              Dropdown, DropdownSearch, HidePlaceholder, InfiniteScroll,
-             AttachBody, MinimumResultsForSearch, SelectOnClose, CloseOnSelect,
-             MultipleButtons,
+             DeferScroll, AttachBody, MinimumResultsForSearch, SelectOnClose,
+             CloseOnSelect, MultipleButtons,
 
              EnglishTranslation) {
   function Defaults () {
@@ -127,6 +129,18 @@ define([
         options.resultsAdapter = Utils.Decorate(
           options.resultsAdapter,
           InfiniteScroll
+        );
+      }
+
+      if (options.deferLoad) {
+        options.resultsAdapter = Utils.Decorate(
+          options.resultsAdapter,
+          InfiniteScroll
+        );
+
+        options.resultsAdapter = Utils.Decorate(
+          options.resultsAdapter,
+          DeferScroll
         );
       }
 
@@ -397,7 +411,8 @@ define([
       maxSelectCount: 3,
       multipleMode: 0,
       maxHeight: 'auto',
-      openWithQuery: ''
+      openWithQuery: '',
+      deferLoad: false
     };
   };
 
