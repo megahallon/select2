@@ -71,6 +71,10 @@ define([
         options.dataAdapter = SelectData;
       }
 
+      if (options.deferLoad) {
+        options.dataAdapter = DeferData;
+      }
+
       if (options.minimumInputLength > 0) {
         options.dataAdapter = Utils.Decorate(
           options.dataAdapter,

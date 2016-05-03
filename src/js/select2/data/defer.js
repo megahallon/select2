@@ -30,7 +30,7 @@ define([
   };
 
   DeferDataAdapter.prototype.query = function (params, callback) {
-    $.extend(params, {page: 1, lastpage: 0});
+    params = $.extend({}, {page: 1, lastpage: 0}, params);
 
     var data = this.options.options.data;
     var pageSize = this.options.options.pageSize;

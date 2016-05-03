@@ -30,7 +30,7 @@ define([
 
         container.on('results:append', function () {
           // TODO currently resets position, maybe not needed
-          if (!this.options.options.defer) {
+          if (!this.options.options.deferLoad) {
             self._positionDropdown();
             self._resizeDropdown();
           }
@@ -144,9 +144,9 @@ define([
     container.top = offset.top;
     container.bottom = offset.top + container.height;
 
-    var $container = this.$dropdown.find('.select2-results > .select2-results__options');
-    if (this.options.options.defer) {
-      $scrollContainer = $container.parent();
+    var $scrollContainer = this.$dropdown.find('.select2-results > .select2-results__options');
+    if (this.options.options.deferLoad) {
+      $scrollContainer = $scrollContainer.parent();
     }
     // TODO this resets scroll position
     $scrollContainer.css('max-height', '');
