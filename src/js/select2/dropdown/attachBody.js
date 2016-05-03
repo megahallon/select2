@@ -29,8 +29,11 @@ define([
         });
 
         container.on('results:append', function () {
-          self._positionDropdown();
-          self._resizeDropdown();
+          // TODO currently resets position, maybe not needed
+          if (!this.options.options.defer) {
+            self._positionDropdown();
+            self._resizeDropdown();
+          }
         });
       }
     });
@@ -141,8 +144,12 @@ define([
     container.top = offset.top;
     container.bottom = offset.top + container.height;
 
-    this.$dropdown.find('.select2-results > .select2-results__options')
-      .css('max-height', '');
+    var $container = this.$dropdown.find('.select2-results > .select2-results__options');
+    if (this.options.options.defer) {
+      $scrollContainer = $container.parent();
+    }
+    // TODO this resets scroll position
+    $scrollContainer.css('max-height', '');
 
     var dropdown = {
       height: this.$dropdown.outerHeight(false)
@@ -209,8 +216,9 @@ define([
       maxHeight = this.maxHeight;
     }
 
-    this.$dropdown.find('.select2-results > .select2-results__options')
-      .css('max-height', maxHeight);
+    $scrollContainer
+      .css('max-height', maxHeight)
+      .css('overflow', 'auto');
 
     this.$dropdownContainer.css(css);
   };
