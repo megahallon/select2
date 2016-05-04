@@ -768,7 +768,7 @@ S2.define('select2/results',[
   };
 
   Results.prototype.clear = function () {
-    this.$results.empty();
+    this.$results.children().remove();
   };
 
   Results.prototype.displayMessage = function (params) {
@@ -3585,6 +3585,75 @@ S2.define('select2/data/ajax',[
   return AjaxAdapter;
 });
 
+S2.define('select2/data/defer',[
+  './array',
+  '../utils',
+  'jquery'
+], function (ArrayData, Utils, $) {
+  function DeferDataAdapter($element, options) {
+    DeferDataAdapter.__super__.constructor.call(this, $element, options);
+  }
+
+  Utils.Extend(DeferDataAdapter, ArrayData);
+
+  DeferDataAdapter.prototype.convertToOptions = function (callback) {
+  };
+
+  DeferDataAdapter.prototype.current = function (callback) {
+    var found = [];
+    var selected = this.$element.val();
+    var data = this.options.options.data;
+    var initialValue = this.options.options.initialValue;
+
+    if (initialValue !== null) {
+      selected = initialValue;
+      this.options.options.initialValue = null;
+    }
+    else if (selected === null) {
+      selected = data[0];
+    }
+    if (!$.isArray(selected)) {
+      selected = [selected];
+    }
+    var options = [];
+    for (var s = 0; s < selected.length; ++s) {
+      found.push({id: selected[s], text: selected[s]});
+      options.push(new Option(selected[s], selected[s], true, true));
+    }
+    this.$element.html(options);
+
+    callback(found);
+  };
+
+  DeferDataAdapter.prototype.query = function (params, callback) {
+    params = $.extend({}, {page: 1, lastpage: 0}, params);
+
+    var data = this.options.options.data;
+    var pageSize = this.options.options.pageSize;
+
+    var results = [];
+    for (var d = 0; d < data.length; ++d) {
+      var _data = {id:data[d], text:data[d]};
+      var matches = this.matches(params, _data);
+      if (matches !== null) {
+        results.push(_data);
+      }
+    }
+
+    callback({
+      results: results.slice(params.lastpage * pageSize,
+                             params.page * pageSize),
+      resultLength: results.length,
+      pagination: {
+        more: results.length >= params.page * pageSize
+      }
+    });
+  };
+
+  return DeferDataAdapter;
+
+});
+
 S2.define('select2/data/tags',[
   'jquery'
 ], function ($) {
@@ -4209,6 +4278,90 @@ S2.define('select2/dropdown/infiniteScroll',[
   return InfiniteScroll;
 });
 
+S2.define('select2/dropdown/deferScroll',[
+  'jquery'
+], function ($) {
+  function DeferScroll (decorated, $element, options, dataAdapter) {
+    decorated.call(this, $element, options, dataAdapter);
+  }
+
+  DeferScroll.prototype.append = function (decorated, data) {
+    decorated.call(this, data);
+
+    var maxlines = data.resultLength;
+    var lines = this.$results.find('li').length;
+    var fillerlines = maxlines - lines;
+    this.$filler.height(30 * fillerlines);
+  };
+
+  DeferScroll.prototype.position = function (decorated, $results, $dropdown) {
+    decorated.call(this, $results, $dropdown);
+
+    var maxlines = this.options.options.data.length;
+    var lines = $results.find('li').length;
+    var fillerlines = maxlines - lines;
+
+    var $resultsContainer = $dropdown.find('.select2-results');
+    var $filler = $(
+      '<span class="select2-filler" style="display:block"></span>');
+    $resultsContainer.append($filler);
+    $filler.height(30 * fillerlines);
+    this.$filler = $filler;
+  };
+
+  DeferScroll.prototype.bind = function (decorated, container, $container) {
+    var self = this;
+
+    decorated.call(this, container, $container);
+
+    var $oldscroller = this.$results.parent();
+    $oldscroller.off('scroll');
+
+    container.on('close', function () {
+      self.trigger('results:all', {
+        data: {results: []},
+        query: {term: ''}
+      });
+    });
+
+    var $scroller = this.$results.parent();
+    $scroller.on('scroll', function () {
+      var isLoadMoreVisible = $.contains(
+        document.documentElement,
+        self.$loadingMore[0]
+      );
+
+      if (self.loading || !isLoadMoreVisible) {
+        return;
+      }
+
+      var currentOffset = $scroller.offset().top +
+        $scroller.outerHeight(false);
+      var loadingMoreOffset = self.$loadingMore.offset().top +
+        self.$loadingMore.outerHeight(false);
+
+
+      var page = Math.floor($scroller.scrollTop() / 30);
+
+      if (currentOffset + 50 >= loadingMoreOffset) {
+        self.loadMore(page);
+      }
+    });
+  };
+
+  DeferScroll.prototype.loadMore = function (_, page) {
+    this.loading = true;
+
+    var params = $.extend({}, {page: 1}, this.lastParams);
+
+    params.lastpage = params.page;
+    params.page = page;
+    this.trigger('query:append', params);
+  };
+
+  return DeferScroll;
+});
+
 S2.define('select2/dropdown/attachBody',[
   'jquery',
   '../utils'
@@ -4240,8 +4393,11 @@ S2.define('select2/dropdown/attachBody',[
         });
 
         container.on('results:append', function () {
-          self._positionDropdown();
-          self._resizeDropdown();
+          // TODO currently resets position, maybe not needed
+          if (!this.options.options.deferLoad) {
+            self._positionDropdown();
+            self._resizeDropdown();
+          }
         });
       }
     });
@@ -4352,8 +4508,12 @@ S2.define('select2/dropdown/attachBody',[
     container.top = offset.top;
     container.bottom = offset.top + container.height;
 
-    this.$dropdown.find('.select2-results > .select2-results__options')
-      .css('max-height', '');
+    var $scrollContainer = this.$dropdown.find('.select2-results > .select2-results__options');
+    if (this.options.options.deferLoad) {
+      $scrollContainer = $scrollContainer.parent();
+    }
+    // TODO this resets scroll position
+    $scrollContainer.css('max-height', '');
 
     var dropdown = {
       height: this.$dropdown.outerHeight(false)
@@ -4420,8 +4580,9 @@ S2.define('select2/dropdown/attachBody',[
       maxHeight = this.maxHeight;
     }
 
-    this.$dropdown.find('.select2-results > .select2-results__options')
-      .css('max-height', maxHeight);
+    $scrollContainer
+      .css('max-height', maxHeight)
+      .css('overflow', 'auto');
 
     this.$dropdownContainer.css(css);
   };
@@ -4684,6 +4845,7 @@ S2.define('select2/defaults',[
   './data/select',
   './data/array',
   './data/ajax',
+  './data/defer',
   './data/tags',
   './data/tokenizer',
   './data/minimumInputLength',
@@ -4694,6 +4856,7 @@ S2.define('select2/defaults',[
   './dropdown/search',
   './dropdown/hidePlaceholder',
   './dropdown/infiniteScroll',
+  './dropdown/deferScroll',
   './dropdown/attachBody',
   './dropdown/minimumResultsForSearch',
   './dropdown/selectOnClose',
@@ -4710,12 +4873,12 @@ S2.define('select2/defaults',[
 
              Utils, Translation, DIACRITICS,
 
-             SelectData, ArrayData, AjaxData, Tags, Tokenizer,
+             SelectData, ArrayData, AjaxData, DeferData, Tags, Tokenizer,
              MinimumInputLength, MaximumInputLength, MaximumSelectionLength,
 
              Dropdown, DropdownSearch, HidePlaceholder, InfiniteScroll,
-             AttachBody, MinimumResultsForSearch, SelectOnClose, CloseOnSelect,
-             MultipleButtons,
+             DeferScroll, AttachBody, MinimumResultsForSearch, SelectOnClose,
+             CloseOnSelect, MultipleButtons,
 
              EnglishTranslation) {
   function Defaults () {
@@ -4732,6 +4895,10 @@ S2.define('select2/defaults',[
         options.dataAdapter = ArrayData;
       } else {
         options.dataAdapter = SelectData;
+      }
+
+      if (options.deferLoad) {
+        options.dataAdapter = DeferData;
       }
 
       if (options.minimumInputLength > 0) {
@@ -4792,6 +4959,18 @@ S2.define('select2/defaults',[
         options.resultsAdapter = Utils.Decorate(
           options.resultsAdapter,
           InfiniteScroll
+        );
+      }
+
+      if (options.deferLoad) {
+        options.resultsAdapter = Utils.Decorate(
+          options.resultsAdapter,
+          InfiniteScroll
+        );
+
+        options.resultsAdapter = Utils.Decorate(
+          options.resultsAdapter,
+          DeferScroll
         );
       }
 
@@ -5062,7 +5241,8 @@ S2.define('select2/defaults',[
       maxSelectCount: 3,
       multipleMode: 0,
       maxHeight: 'auto',
-      openWithQuery: ''
+      openWithQuery: '',
+      deferLoad: false
     };
   };
 
