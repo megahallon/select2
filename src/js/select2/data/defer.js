@@ -16,16 +16,25 @@ define([
     var found = [];
     var selected = this.$element.val();
     var data = this.options.options.data;
+    var initialValue = this.options.options.initialValue;
 
-    if (selected == null) {
+    if (initialValue !== null) {
+      selected = initialValue;
+      this.options.options.initialValue = null;
+    }
+    else if (selected === null) {
       selected = data[0];
     }
     if (!$.isArray(selected)) {
       selected = [selected];
     }
+    var options = [];
     for (var s = 0; s < selected.length; ++s) {
       found.push({id: selected[s], text: selected[s]});
+      options.push(new Option(selected[s], selected[s], true, true));
     }
+    this.$element.html(options);
+
     callback(found);
   };
 
