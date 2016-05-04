@@ -27,7 +27,7 @@ define([
   };
 
   Results.prototype.clear = function () {
-    this.$results.empty();
+    this.$results.children().remove();
   };
 
   Results.prototype.displayMessage = function (params) {
