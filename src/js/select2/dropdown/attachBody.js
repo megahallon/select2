@@ -144,7 +144,8 @@ define([
     container.top = offset.top;
     container.bottom = offset.top + container.height;
 
-    var $scrollContainer = this.$dropdown.find('.select2-results > .select2-results__options');
+    var $scrollContainer =
+      this.$dropdown.find('.select2-results > .select2-results__options');
     if (this.options.get('deferLoad')) {
       $scrollContainer = $scrollContainer.parent();
     }

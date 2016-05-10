@@ -408,7 +408,8 @@ define([
       var currentOffset = $scrollContainer.offset().top +
         $scrollContainer.outerHeight(false);
       var nextBottom = $next.offset().top + $next.outerHeight(false);
-      var nextOffset = $scrollContainer.scrollTop() + nextBottom - currentOffset;
+      var nextOffset =
+        $scrollContainer.scrollTop() + nextBottom - currentOffset;
 
       if (nextIndex === 0) {
         $scrollContainer.scrollTop(0);
@@ -530,7 +531,8 @@ define([
 
     if (currentIndex <= 2) {
       $scrollContainer.scrollTop(0);
-    } else if (offsetDelta > $scrollContainer.outerHeight() || offsetDelta < 0) {
+    } else if (offsetDelta > $scrollContainer.outerHeight() ||
+               offsetDelta < 0) {
       $scrollContainer.scrollTop(nextOffset);
     }
   };

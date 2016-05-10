@@ -31,7 +31,7 @@ define([
     var options = [];
     for (var s = 0; s < selected.length; ++s) {
       found.push({id: selected[s], text: selected[s]});
-      options.push(new Option(selected[s], selected[s], true, true));
+      options.push($('<option>' + selected + '</option>'));
     }
     this.$element.html(options);
 
