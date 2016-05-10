@@ -366,14 +366,19 @@ define([
 
       $next.trigger('mouseenter');
 
-      var currentOffset = self.$results.offset().top;
+      var $scrollContainer = self.$results;
+      if (this.options.get('deferLoad')) {
+        $scrollContainer = self.$results.parent();
+      }
+
+      var currentOffset = $scrollContainer.offset().top;
       var nextTop = $next.offset().top;
-      var nextOffset = self.$results.scrollTop() + (nextTop - currentOffset);
+      var nextOffset = $scrollContainer.scrollTop() + (nextTop - currentOffset);
 
       if (nextIndex === 0) {
-        self.$results.scrollTop(0);
+        $scrollContainer.scrollTop(0);
       } else if (nextTop - currentOffset < 0) {
-        self.$results.scrollTop(nextOffset);
+        $scrollContainer.scrollTop(nextOffset);
       }
     });
 
@@ -395,15 +400,20 @@ define([
 
       $next.trigger('mouseenter');
 
-      var currentOffset = self.$results.offset().top +
-        self.$results.outerHeight(false);
+      var $scrollContainer = self.$results;
+      if (this.options.get('deferLoad')) {
+        $scrollContainer = self.$results.parent();
+      }
+
+      var currentOffset = $scrollContainer.offset().top +
+        $scrollContainer.outerHeight(false);
       var nextBottom = $next.offset().top + $next.outerHeight(false);
-      var nextOffset = self.$results.scrollTop() + nextBottom - currentOffset;
+      var nextOffset = $scrollContainer.scrollTop() + nextBottom - currentOffset;
 
       if (nextIndex === 0) {
-        self.$results.scrollTop(0);
+        $scrollContainer.scrollTop(0);
       } else if (nextBottom > currentOffset) {
-        self.$results.scrollTop(nextOffset);
+        $scrollContainer.scrollTop(nextOffset);
       }
     });
 
@@ -417,21 +427,26 @@ define([
 
     if ($.fn.mousewheel) {
       this.$results.on('mousewheel', function (e) {
-        var top = self.$results.scrollTop();
+        var $scrollContainer = self.$results;
+        if (self.options.get('deferLoad')) {
+          $scrollContainer = self.$results.parent();
+        }
 
-        var bottom = self.$results.get(0).scrollHeight - top + e.deltaY;
+        var top = $scrollContainer.scrollTop();
+
+        var bottom = $scrollContainer.get(0).scrollHeight - top + e.deltaY;
 
         var isAtTop = e.deltaY > 0 && top - e.deltaY <= 0;
-        var isAtBottom = e.deltaY < 0 && bottom <= self.$results.height();
+        var isAtBottom = e.deltaY < 0 && bottom <= $scrollContainer.height();
 
         if (isAtTop) {
-          self.$results.scrollTop(0);
+          $scrollContainer.scrollTop(0);
 
           e.preventDefault();
           e.stopPropagation();
         } else if (isAtBottom) {
-          self.$results.scrollTop(
-            self.$results.get(0).scrollHeight - self.$results.height()
+          $scrollContainer.scrollTop(
+            $scrollContainer.get(0).scrollHeight - $scrollContainer.height()
           );
 
           e.preventDefault();
@@ -501,17 +516,22 @@ define([
 
     var currentIndex = $options.index($highlighted);
 
-    var currentOffset = this.$results.offset().top;
+    var $scrollContainer = this.$results;
+    if (this.options.get('deferLoad')) {
+      $scrollContainer = this.$results.parent();
+    }
+
+    var currentOffset = $scrollContainer.offset().top;
     var nextTop = $highlighted.offset().top;
-    var nextOffset = this.$results.scrollTop() + (nextTop - currentOffset);
+    var nextOffset = $scrollContainer.scrollTop() + (nextTop - currentOffset);
 
     var offsetDelta = nextTop - currentOffset;
     nextOffset -= $highlighted.outerHeight(false) * 2;
 
     if (currentIndex <= 2) {
-      this.$results.scrollTop(0);
-    } else if (offsetDelta > this.$results.outerHeight() || offsetDelta < 0) {
-      this.$results.scrollTop(nextOffset);
+      $scrollContainer.scrollTop(0);
+    } else if (offsetDelta > $scrollContainer.outerHeight() || offsetDelta < 0) {
+      $scrollContainer.scrollTop(nextOffset);
     }
   };
 
