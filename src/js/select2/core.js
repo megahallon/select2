@@ -119,6 +119,29 @@ define([
   Select2.prototype._resolveWidth = function ($element, method) {
     var WIDTH = /^width:(([-+]?([0-9]*\.)?[0-9]+)(px|em|ex|%|in|cm|mm|pt|pc))/i;
 
+    if (this.options.get('data')) {
+        var data = this.options.get('data');
+        var maxLength = 0;
+        var maxText = '';
+        for (var d = 0; d < data.length; ++d) {
+            if (data[d].length > maxLength) {
+                maxLength = data[d].length;
+                maxText = data[d];
+            }
+        }
+        var el = jQuery('<select><option>' + maxText
+                        + '</option></select>').hide().appendTo(document.body);
+        var width = el.outerWidth() + 10;
+        el.remove();
+
+        var maxWidth = $element.css('max-width') || this.options.get('maxWidth');
+        if (maxWidth > 0 && elementWidth > maxWidth) {
+            width = maxWidth;
+        }
+
+        return width;
+    }
+
     if (method == 'resolve') {
       var styleWidth = this._resolveWidth($element, 'style');
 
