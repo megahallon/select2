@@ -149,7 +149,7 @@ define([
     if (this.options.get('deferLoad')) {
       $scrollContainer = $scrollContainer.parent();
     }
-    // TODO this resets scroll position
+    var top = $scrollContainer.scrollTop();
     $scrollContainer.css('max-height', '');
 
     var dropdown = {
@@ -220,6 +220,8 @@ define([
     $scrollContainer
       .css('max-height', maxHeight)
       .css('overflow', 'auto');
+
+    $scrollContainer.scrollTop(top);
 
     this.$dropdownContainer.css(css);
   };
