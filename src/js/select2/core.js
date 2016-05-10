@@ -398,13 +398,10 @@ define([
   Select2.prototype._syncOptionDisable = function (data, disabled) {
     if (data) {
       data.disabled = disabled;
-      console.log('sync option ' + data._resultId + ' disable ' + disabled);
     }
   };
 
   Select2.prototype._syncOptionSelect = function (index, selected) {
-    console.log('sync option ' + index + ' selected ' + selected);
-
     var self = this;
     this.dataAdapter.current(function (data) {
       self.trigger('selection:update', {
