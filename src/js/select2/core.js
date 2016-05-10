@@ -362,6 +362,14 @@ define([
           self.trigger('results:next', {});
 
           evt.preventDefault();
+        } else if (key === KEYS.PAGE_UP) {
+          self.trigger('results:previous', {offset: 50});
+
+          evt.preventDefault();
+        } else if (key === KEYS.PAGE_DOWN) {
+          self.trigger('results:next', {offset: 50});
+
+          evt.preventDefault();
         }
       } else {
         if (key === KEYS.ENTER || key === KEYS.SPACE ||

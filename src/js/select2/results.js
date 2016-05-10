@@ -343,7 +343,7 @@ define([
       }
     });
 
-    container.on('results:previous', function () {
+    container.on('results:previous', function (params) {
       var $highlighted = self.getHighlightedResults();
 
       var $options = self.$results.find('[aria-selected]');
@@ -355,7 +355,15 @@ define([
         return;
       }
 
-      var nextIndex = currentIndex - 1;
+      var offset = 1;
+      if (params && params.offset) {
+        offset = params.offset;
+      }
+
+      var nextIndex = currentIndex - offset;
+      if (nextIndex < 0) {
+        nextIndex = 0;
+      }
 
       // If none are highlighted, highlight the first
       if ($highlighted.length === 0) {
@@ -382,18 +390,23 @@ define([
       }
     });
 
-    container.on('results:next', function () {
+    container.on('results:next', function (params) {
       var $highlighted = self.getHighlightedResults();
 
       var $options = self.$results.find('[aria-selected]');
 
       var currentIndex = $options.index($highlighted);
 
-      var nextIndex = currentIndex + 1;
+      var offset = 1;
+      if (params && params.offset) {
+        offset = params.offset;
+      }
+
+      var nextIndex = currentIndex + offset;
 
       // If we are at the last option, stay there
       if (nextIndex >= $options.length) {
-        return;
+        nextIndex = $options.length - 1;
       }
 
       var $next = $options.eq(nextIndex);
