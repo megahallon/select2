@@ -30,7 +30,7 @@ define([
 
         container.on('results:append', function () {
           // TODO currently resets position, maybe not needed
-          if (!this.options.options.deferLoad) {
+          if (!this.options.get('deferLoad')) {
             self._positionDropdown();
             self._resizeDropdown();
           }
@@ -145,7 +145,7 @@ define([
     container.bottom = offset.top + container.height;
 
     var $scrollContainer = this.$dropdown.find('.select2-results > .select2-results__options');
-    if (this.options.options.deferLoad) {
+    if (this.options.get('deferLoad')) {
       $scrollContainer = $scrollContainer.parent();
     }
     // TODO this resets scroll position

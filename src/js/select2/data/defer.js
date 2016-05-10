@@ -15,12 +15,12 @@ define([
   DeferDataAdapter.prototype.current = function (callback) {
     var found = [];
     var selected = this.$element.val();
-    var data = this.options.options.data;
-    var initialValue = this.options.options.initialValue;
+    var data = this.options.get('data');
+    var initialValue = this.options.get('initialValue');
 
     if (initialValue !== null) {
       selected = initialValue;
-      this.options.options.initialValue = null;
+      this.options.set('initialValue', null);
     }
     else if (selected === null) {
       selected = data[0];
@@ -41,8 +41,8 @@ define([
   DeferDataAdapter.prototype.query = function (params, callback) {
     params = $.extend({}, {page: 1, lastpage: 0}, params);
 
-    var data = this.options.options.data;
-    var pageSize = this.options.options.pageSize;
+    var data = this.options.get('data');
+    var pageSize = this.options.get('pageSize');
 
     var results = [];
     for (var d = 0; d < data.length; ++d) {

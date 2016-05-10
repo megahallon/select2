@@ -17,7 +17,7 @@ define([
   DeferScroll.prototype.position = function (decorated, $results, $dropdown) {
     decorated.call(this, $results, $dropdown);
 
-    var maxlines = this.options.options.data.length;
+    var maxlines = this.options.get('data').length;
     var lines = $results.find('li').length;
     var fillerlines = maxlines - lines;
 
