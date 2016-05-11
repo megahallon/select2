@@ -241,7 +241,9 @@ define([
       var w = this.$container.outerWidth(false);
       this.$dropdownContainer.find('.select2-results__group').each(function () {
         var text = $(this).text();
-        var el = $('<span class=select2-container--default><span class=select2-results__group>' + text + '</span></span>').hide().appendTo(document.body);
+        var el = $('<span class=select2-container--default>' +
+                   '<span class=select2-results__group>' + text +
+                   '</span></span>').hide().appendTo(document.body);
         var groupWidth = el.outerWidth() + 15;
         el.remove();
         if (groupWidth > w) {

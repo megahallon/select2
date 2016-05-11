@@ -1002,6 +1002,7 @@ S2.define('select2/results',[
 
       if (container.isOpen()) {
         self.setClasses();
+        self.ensureHighlightVisible();
       }
     });
 
@@ -1084,7 +1085,7 @@ S2.define('select2/results',[
       }
     });
 
-    container.on('results:previous', function () {
+    container.on('results:previous', function (params) {
       var $highlighted = self.getHighlightedResults();
 
       var $options = self.$results.find('[aria-selected]');
@@ -1096,7 +1097,15 @@ S2.define('select2/results',[
         return;
       }
 
-      var nextIndex = currentIndex - 1;
+      var offset = 1;
+      if (params && params.offset) {
+        offset = params.offset;
+      }
+
+      var nextIndex = currentIndex - offset;
+      if (nextIndex < 0) {
+        nextIndex = 0;
+      }
 
       // If none are highlighted, highlight the first
       if ($highlighted.length === 0) {
@@ -1107,44 +1116,60 @@ S2.define('select2/results',[
 
       $next.trigger('mouseenter');
 
-      var currentOffset = self.$results.offset().top;
+      var $scrollContainer = self.$results;
+      if (this.options.get('deferLoad')) {
+        $scrollContainer = self.$results.parent();
+      }
+
+      var currentOffset = $scrollContainer.offset().top;
       var nextTop = $next.offset().top;
-      var nextOffset = self.$results.scrollTop() + (nextTop - currentOffset);
+      var nextOffset = $scrollContainer.scrollTop() + (nextTop - currentOffset);
 
       if (nextIndex === 0) {
-        self.$results.scrollTop(0);
+        $scrollContainer.scrollTop(0);
       } else if (nextTop - currentOffset < 0) {
-        self.$results.scrollTop(nextOffset);
+        $scrollContainer.scrollTop(nextOffset);
       }
     });
 
-    container.on('results:next', function () {
+    container.on('results:next', function (params) {
       var $highlighted = self.getHighlightedResults();
 
       var $options = self.$results.find('[aria-selected]');
 
       var currentIndex = $options.index($highlighted);
 
-      var nextIndex = currentIndex + 1;
+      var offset = 1;
+      if (params && params.offset) {
+        offset = params.offset;
+      }
+
+      var nextIndex = currentIndex + offset;
 
       // If we are at the last option, stay there
       if (nextIndex >= $options.length) {
-        return;
+        nextIndex = $options.length - 1;
       }
 
       var $next = $options.eq(nextIndex);
 
       $next.trigger('mouseenter');
 
-      var currentOffset = self.$results.offset().top +
-        self.$results.outerHeight(false);
+      var $scrollContainer = self.$results;
+      if (this.options.get('deferLoad')) {
+        $scrollContainer = self.$results.parent();
+      }
+
+      var currentOffset = $scrollContainer.offset().top +
+        $scrollContainer.outerHeight(false);
       var nextBottom = $next.offset().top + $next.outerHeight(false);
-      var nextOffset = self.$results.scrollTop() + nextBottom - currentOffset;
+      var nextOffset =
+        $scrollContainer.scrollTop() + nextBottom - currentOffset;
 
       if (nextIndex === 0) {
-        self.$results.scrollTop(0);
+        $scrollContainer.scrollTop(0);
       } else if (nextBottom > currentOffset) {
-        self.$results.scrollTop(nextOffset);
+        $scrollContainer.scrollTop(nextOffset);
       }
     });
 
@@ -1158,21 +1183,26 @@ S2.define('select2/results',[
 
     if ($.fn.mousewheel) {
       this.$results.on('mousewheel', function (e) {
-        var top = self.$results.scrollTop();
+        var $scrollContainer = self.$results;
+        if (self.options.get('deferLoad')) {
+          $scrollContainer = self.$results.parent();
+        }
 
-        var bottom = self.$results.get(0).scrollHeight - top + e.deltaY;
+        var top = $scrollContainer.scrollTop();
+
+        var bottom = $scrollContainer.get(0).scrollHeight - top + e.deltaY;
 
         var isAtTop = e.deltaY > 0 && top - e.deltaY <= 0;
-        var isAtBottom = e.deltaY < 0 && bottom <= self.$results.height();
+        var isAtBottom = e.deltaY < 0 && bottom <= $scrollContainer.height();
 
         if (isAtTop) {
-          self.$results.scrollTop(0);
+          $scrollContainer.scrollTop(0);
 
           e.preventDefault();
           e.stopPropagation();
         } else if (isAtBottom) {
-          self.$results.scrollTop(
-            self.$results.get(0).scrollHeight - self.$results.height()
+          $scrollContainer.scrollTop(
+            $scrollContainer.get(0).scrollHeight - $scrollContainer.height()
           );
 
           e.preventDefault();
@@ -1242,17 +1272,23 @@ S2.define('select2/results',[
 
     var currentIndex = $options.index($highlighted);
 
-    var currentOffset = this.$results.offset().top;
+    var $scrollContainer = this.$results;
+    if (this.options.get('deferLoad')) {
+      $scrollContainer = this.$results.parent();
+    }
+
+    var currentOffset = $scrollContainer.offset().top;
     var nextTop = $highlighted.offset().top;
-    var nextOffset = this.$results.scrollTop() + (nextTop - currentOffset);
+    var nextOffset = $scrollContainer.scrollTop() + (nextTop - currentOffset);
 
     var offsetDelta = nextTop - currentOffset;
     nextOffset -= $highlighted.outerHeight(false) * 2;
 
     if (currentIndex <= 2) {
-      this.$results.scrollTop(0);
-    } else if (offsetDelta > this.$results.outerHeight() || offsetDelta < 0) {
-      this.$results.scrollTop(nextOffset);
+      $scrollContainer.scrollTop(0);
+    } else if (offsetDelta > $scrollContainer.outerHeight() ||
+               offsetDelta < 0) {
+      $scrollContainer.scrollTop(nextOffset);
     }
   };
 
@@ -3602,12 +3638,12 @@ S2.define('select2/data/defer',[
   DeferDataAdapter.prototype.current = function (callback) {
     var found = [];
     var selected = this.$element.val();
-    var data = this.options.options.data;
-    var initialValue = this.options.options.initialValue;
+    var data = this.options.get('data');
+    var initialValue = this.options.get('initialValue');
 
     if (initialValue !== null) {
       selected = initialValue;
-      this.options.options.initialValue = null;
+      this.options.set('initialValue', null);
     }
     else if (selected === null) {
       selected = data[0];
@@ -3618,7 +3654,7 @@ S2.define('select2/data/defer',[
     var options = [];
     for (var s = 0; s < selected.length; ++s) {
       found.push({id: selected[s], text: selected[s]});
-      options.push(new Option(selected[s], selected[s], true, true));
+      options.push($('<option>' + selected + '</option>'));
     }
     this.$element.html(options);
 
@@ -3628,8 +3664,8 @@ S2.define('select2/data/defer',[
   DeferDataAdapter.prototype.query = function (params, callback) {
     params = $.extend({}, {page: 1, lastpage: 0}, params);
 
-    var data = this.options.options.data;
-    var pageSize = this.options.options.pageSize;
+    var data = this.options.get('data');
+    var pageSize = this.options.get('pageSize');
 
     var results = [];
     for (var d = 0; d < data.length; ++d) {
@@ -4291,21 +4327,21 @@ S2.define('select2/dropdown/deferScroll',[
     var maxlines = data.resultLength;
     var lines = this.$results.find('li').length;
     var fillerlines = maxlines - lines;
-    this.$filler.height(30 * fillerlines);
+    var itemHeight = this.$results.find('li:first').outerHeight();
+    this.$filler.height(itemHeight * fillerlines);
   };
 
   DeferScroll.prototype.position = function (decorated, $results, $dropdown) {
     decorated.call(this, $results, $dropdown);
 
-    var maxlines = this.options.options.data.length;
-    var lines = $results.find('li').length;
-    var fillerlines = maxlines - lines;
+    var maxlines = this.options.get('data').length;
 
     var $resultsContainer = $dropdown.find('.select2-results');
+
     var $filler = $(
       '<span class="select2-filler" style="display:block"></span>');
     $resultsContainer.append($filler);
-    $filler.height(30 * fillerlines);
+    $filler.height(30 * maxlines);
     this.$filler = $filler;
   };
 
@@ -4394,7 +4430,7 @@ S2.define('select2/dropdown/attachBody',[
 
         container.on('results:append', function () {
           // TODO currently resets position, maybe not needed
-          if (!this.options.options.deferLoad) {
+          if (!this.options.get('deferLoad')) {
             self._positionDropdown();
             self._resizeDropdown();
           }
@@ -4508,11 +4544,12 @@ S2.define('select2/dropdown/attachBody',[
     container.top = offset.top;
     container.bottom = offset.top + container.height;
 
-    var $scrollContainer = this.$dropdown.find('.select2-results > .select2-results__options');
-    if (this.options.options.deferLoad) {
+    var $scrollContainer =
+      this.$dropdown.find('.select2-results > .select2-results__options');
+    if (this.options.get('deferLoad')) {
       $scrollContainer = $scrollContainer.parent();
     }
-    // TODO this resets scroll position
+    var top = $scrollContainer.scrollTop();
     $scrollContainer.css('max-height', '');
 
     var dropdown = {
@@ -4584,6 +4621,8 @@ S2.define('select2/dropdown/attachBody',[
       .css('max-height', maxHeight)
       .css('overflow', 'auto');
 
+    $scrollContainer.scrollTop(top);
+
     this.$dropdownContainer.css(css);
   };
 
@@ -4596,6 +4635,20 @@ S2.define('select2/dropdown/attachBody',[
       css.minWidth = css.width;
       css.position = 'relative';
       css.width = 'auto';
+    }
+    else {
+      // Make room for group headers
+      var w = this.$container.outerWidth(false);
+      this.$dropdownContainer.find('.select2-results__group').each(function () {
+        var text = $(this).text();
+        var el = $('<span class=select2-container--default><span class=select2-results__group>' + text + '</span></span>').hide().appendTo(document.body);
+        var groupWidth = el.outerWidth() + 15;
+        el.remove();
+        if (groupWidth > w) {
+          css.width = groupWidth + 'px';
+          w = groupWidth;
+        }
+      });
     }
 
     this.$dropdown.css(css);
@@ -5506,6 +5559,29 @@ S2.define('select2/core',[
   Select2.prototype._resolveWidth = function ($element, method) {
     var WIDTH = /^width:(([-+]?([0-9]*\.)?[0-9]+)(px|em|ex|%|in|cm|mm|pt|pc))/i;
 
+    if (this.options.get('data')) {
+        var data = this.options.get('data');
+        var maxLength = 0;
+        var maxText = '';
+        for (var d = 0; d < data.length; ++d) {
+          if (data[d].length > maxLength) {
+            maxLength = data[d].length;
+            maxText = data[d];
+          }
+        }
+        var el = $('<select><option>' + maxText +
+                   '</option></select>').hide().appendTo(document.body);
+        var width = el.outerWidth() + 10;
+        el.remove();
+
+        var maxWidth = this.options.get('maxWidth');
+        if (maxWidth > 0 && width > maxWidth) {
+          width = maxWidth;
+        }
+
+        return width;
+    }
+
     if (method == 'resolve') {
       var styleWidth = this._resolveWidth($element, 'style');
 
@@ -5529,11 +5605,6 @@ S2.define('select2/core',[
       }
       if (elementWidth < minWidth) {
         elementWidth = minWidth;
-      }
-
-      var maxWidth = $element.css('max-width');
-      if (maxWidth > 0 && elementWidth > maxWidth) {
-        elementWidth = maxWidth;
       }
 
       return elementWidth + 'px';
@@ -5725,6 +5796,14 @@ S2.define('select2/core',[
           self.trigger('results:next', {});
 
           evt.preventDefault();
+        } else if (key === KEYS.PAGE_UP) {
+          self.trigger('results:previous', {offset: 50});
+
+          evt.preventDefault();
+        } else if (key === KEYS.PAGE_DOWN) {
+          self.trigger('results:next', {offset: 50});
+
+          evt.preventDefault();
         }
       } else {
         if (key === KEYS.ENTER || key === KEYS.SPACE ||
@@ -5753,13 +5832,10 @@ S2.define('select2/core',[
   Select2.prototype._syncOptionDisable = function (data, disabled) {
     if (data) {
       data.disabled = disabled;
-      console.log('sync option ' + data._resultId + ' disable ' + disabled);
     }
   };
 
   Select2.prototype._syncOptionSelect = function (index, selected) {
-    console.log('sync option ' + index + ' selected ' + selected);
-
     var self = this;
     this.dataAdapter.current(function (data) {
       self.trigger('selection:update', {

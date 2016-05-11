@@ -11,21 +11,21 @@ define([
     var maxlines = data.resultLength;
     var lines = this.$results.find('li').length;
     var fillerlines = maxlines - lines;
-    this.$filler.height(30 * fillerlines);
+    var itemHeight = this.$results.find('li:first').outerHeight();
+    this.$filler.height(itemHeight * fillerlines);
   };
 
   DeferScroll.prototype.position = function (decorated, $results, $dropdown) {
     decorated.call(this, $results, $dropdown);
 
     var maxlines = this.options.get('data').length;
-    var lines = $results.find('li').length;
-    var fillerlines = maxlines - lines;
 
     var $resultsContainer = $dropdown.find('.select2-results');
+
     var $filler = $(
       '<span class="select2-filler" style="display:block"></span>');
     $resultsContainer.append($filler);
-    $filler.height(30 * fillerlines);
+    $filler.height(30 * maxlines);
     this.$filler = $filler;
   };
 
