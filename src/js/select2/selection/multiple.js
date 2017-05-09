@@ -27,6 +27,9 @@ define([
     MultipleSelection.__super__.bind.apply(this, arguments);
 
     this.$selection.on('click', function (evt) {
+      if ($(evt.target).hasClass('select2-selection__choice__remove')) {
+        return;
+      }
       self.trigger('toggle', {
         originalEvent: evt
       });

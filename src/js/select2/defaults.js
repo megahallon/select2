@@ -168,6 +168,10 @@ define([
         if (options.multipleMode == 1) {
           options.dropdownAdapter = Dropdown;
         }
+        else if (options.multipleMode == 2) {
+          options.dropdownAdapter = Utils.Decorate(
+            Dropdown, DropdownSearch);
+        }
         else {
           options.dropdownAdapter = Utils.Decorate(
             Dropdown, DropdownSearch);
@@ -217,7 +221,7 @@ define([
 
     if (options.selectionAdapter == null) {
       if (options.multiple) {
-        if (options.multipleMode == 1) {
+        if (options.multipleMode == 1 || options.multipleMode == 2) {
           options.selectionAdapter = MultipleSelection;
         }
         else {
@@ -242,7 +246,7 @@ define([
         );
       }
 
-      if (options.multiple && options.multipleMode == 1) {
+      if (options.multiple && (options.multipleMode == 1 || options.multipleMode == 2)) {
         options.selectionAdapter = Utils.Decorate(
           options.selectionAdapter,
           SelectionSearch
